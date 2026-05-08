@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CI Calculator">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0a">
+<title>Compound Interest Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --text: #f0ede6;
+    --text-secondary: #888780;
+    --text-muted: #4a4a46;
+    --teal: #1D9E75;
+    --teal-light: #5DCAA5;
+    --teal-dim: rgba(29,158,117,0.12);
+    --blue: #378ADD;
+    --blue-light: #85B7EB;
+    --blue-dim: rgba(55,138,221,0.12);
+    --gold: #EF9F27;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overscroll-behavior: none;
+  }
+
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 0 40px;
+  }
+
+  /* Header */
+  .header {
+    padding: 52px 20px 20px;
+    border-bottom: 0.5px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .header-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .header-title {
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 300;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .header-title em {
+    font-style: italic;
+    color: var(--teal-light);
+  }
+
+  /* Panels */
+  .panels { padding: 0 16px; display: flex; flex-direction: column; gap: 14px; margin-bottom: 14px; }
+
+  .panel {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    overflow: hidden;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .panel-head-a { background: rgba(29,158,117,0.1); }
+  .panel-head-b { background: rgba(55,138,221,0.1); }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-a { background: var(--teal); }
+  .dot-b { background: var(--blue); }
+
+  .panel-name {
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    width: 100%;
+    color: var(--text);
+  }
+  .panel-head-a .panel-name { color: var(--teal-light); }
+  .panel-head-b .panel-name { color: var(--blue-light); }
+
+  .panel-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  /* Fields */
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .lbl {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .inp-wrap { position: relative; }
+  .pre, .suf {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--text-muted);
+    pointer-events: none;
+    font-family: 'DM Mono', monospace;
+  }
+  .pre { left: 11px; }
+  .suf { right: 11px; }
+
+  input[type="number"], input[type="text"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    padding: 10px 12px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.15s;
+  }
+  input[type="number"]:focus, input[type="text"]:focus {
+    border-color: var(--border-strong);
+  }
+  input[type="number"] { -moz-appearance: textfield; }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .inp-sym { padding-left: 26px; }
+  .inp-pct { padding-right: 28px; }
+
+  /* Frequency */
+  .freq-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .fb {
+    padding: 5px 11px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    border-radius: 20px;
+    cursor: pointer;
+    border: 0.5px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    transition: all 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .fb:active { transform: scale(0.95); }
+  .fb.on-a { background: var(--teal-dim); border-color: var(--teal); color: var(--teal-light); }
+  .fb.on-b { background: var(--blue-dim); border-color: var(--blue); color: var(--blue-light); }
+
+  /* Metrics */
+  .metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .mc {
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 9px 10px;
+    border: 0.5px solid var(--border);
+  }
+  .mc-lbl { font-size: 9px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+  .mc-val { font-size: 13px; font-weight: 500; color: var(--text); }
+  .mc-val-a { color: var(--teal-light); }
+  .mc-val-b { color: var(--blue-light); }
+
+  /* Winner */
+  .winner-wrap { padding: 0 16px; margin-bottom: 20px; }
+  .winner {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .winner-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .winner-icon { font-size: 20px; flex-shrink: 0; }
+  .winner-info { min-width: 0; }
+  .winner-text { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .winner-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .winner-badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: 'DM Mono', monospace;
+  }
+  .badge-a { background: var(--teal-dim); color: var(--teal-light); border: 0.5px solid var(--teal); }
+  .badge-b { background: var(--blue-dim); color: var(--blue-light); border: 0.5px solid var(--blue); }
+  .badge-tie { background: var(--surface2); color: var(--text-secondary); border: 0.5px solid var(--border); }
+
+  /* Chart */
+  .chart-section { padding: 0 16px; }
+  .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .chart-title { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+  .legend { display: flex; gap: 14px; }
+  .leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-secondary); }
+  .leg-sq { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .leg-dash { width: 12px; height: 2px; background: #444441; flex-shrink: 0; border-radius: 1px; }
+
+  .chart-box {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 12px 10px;
+  }
+  .chart-canvas-wrap { position: relative; width: 100%; height: 220px; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 28px 20px 0;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    line-height: 1.8;
+  }
+
+  /* Divider */
+  .divider { height: 0.5px; background: var(--border); margin: 0 16px 14px; }
+
+  /* Safe area for notch phones */
+  @supports (padding-top: env(safe-area-inset-top)) {
+    .header { padding-top: max(52px, calc(env(safe-area-inset-top) + 20px)); }
+    .app { padding-bottom: max(40px, calc(env(safe-area-inset-bottom) + 20px)); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-eyebrow">Financial tool · INR</div>
+    <h1 class="header-title">Compound<br><em>Interest</em> Calculator</h1>
+  </div>
+
+  <div class="panels">
+
+    <!-- Asset A -->
+    <div class="panel">
+      <div class="panel-head panel-head-a">
+        <span class="dot dot-a"></span>
+        <input class="panel-name" id="nameA" type="text" value="Asset A" placeholder="Asset name" oninput="calc()">
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <div class="lbl">Principal amount</div>
+          <div class="inp-wrap">
+            <span class="pre">₹</span>
+            <input class="inp-sym" id="pA" type="number" inputmode="decimal" value="100000" min="1" oninput="calc()">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <div class="lbl">Interest rate (% p.a.)</div>
+            <div class="inp-wrap">
+              <input class="inp-pct" id="rA" type="number" inputmode="decimal" value="7" min="0.01" max="100" step="0.1" oninput="calc()">
+              <span class="suf">%</span>
+            </div>
+          </div>
+          <div class="field">
+            <div class="lbl">Duration (years)</div>
+            <input id="yA" type="number" inputmode="numeric" value="10" min="1" max="100" oninput="calc()">
+          </div>
+        </div>
+        <div class="field">
+          <div class="lbl">Compounding frequency</div>
+          <div class="freq-row" id="frqA">
+            <button class="fb" data-n="1" onclick="setF('A',this)">Yearly</button>
+            <button class="fb" data-n="2" onclick="setF('A',this)">Half-yearly</button>
+            <button class="fb on-a" data-n="4" onclick="setF('A',this)">Quarterly</button>
+            <button class="fb" data-n="12" onclick="setF('A',this)">Monthly</button>
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="mc"><div class="mc-lbl">Principal</div><div class="mc-val" id="mAp">—</div></div>
+          <div class="mc"><div class="mc-lbl">Interest</div><div class="mc-val" id="mAi">—</div></div>
+          <div class="mc"><div class="mc-lbl">Future value</div><div class="mc-val mc-val-a" id="mAf">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Asset B -->
+    <div class="panel">
+      <div class="panel-head panel-head-b">
+        <span class="dot dot-b"></span>
+        <input class="panel-name" id="nameB" type="text" value="Asset B" placeholder="Asset name" oninput="calc()">
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <div class="lbl">Principal amount</div>
+          <div class="inp-wrap">
+            <span class="pre">₹</span>
+            <input class="inp-sym" id="pB" type="number" inputmode="decimal" value="100000" min="1" oninput="calc()">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <div class="lbl">Interest rate (% p.a.)</div>
+            <div class="inp-wrap">
+              <input class="inp-pct" id="rB" type="number" inputmode="decimal" value="12" min="0.01" max="100" step="0.1" oninput="calc()">
+              <span class="suf">%</span>
+            </div>
+          </div>
+          <div class="field">
+            <div class="lbl">Duration (years)</div>
+            <input id="yB" type="number" inputmode="numeric" value="10" min="1" max="100" oninput="calc()">
+          </div>
+        </div>
+        <div class="field">
+          <div class="lbl">Compounding frequency</div>
+          <div class="freq-row" id="frqB">
+            <button class="fb" data-n="1" onclick="setF('B',this)">Yearly</button>
+            <button class="fb" data-n="2" onclick="setF('B',this)">Half-yearly</button>
+            <button class="fb on-b" data-n="4" onclick="setF('B',this)">Quarterly</button>
+            <button class="fb" data-n="12" onclick="setF('B',this)">Monthly</button>
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="mc"><div class="mc-lbl">Principal</div><div class="mc-val" id="mBp">—</div></div>
+          <div class="mc"><div class="mc-lbl">Interest</div><div class="mc-val" id="mBi">—</div></div>
+          <div class="mc"><div class="mc-lbl">Future value</div><div class="mc-val mc-val-b" id="mBf">—</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Winner bar -->
+  <div class="winner-wrap">
+    <div class="winner">
+      <div class="winner-left">
+        <span class="winner-icon" id="w-icon">🏆</span>
+        <div class="winner-info">
+          <div class="winner-text" id="w-text">—</div>
+          <div class="winner-sub" id="w-sub">—</div>
+        </div>
+      </div>
+      <span class="winner-badge badge-tie" id="w-badge">—</span>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="chart-section">
+    <div class="chart-header">
+      <span class="chart-title">Growth over time</span>
+      <div class="legend">
+        <span class="leg"><span class="leg-sq" style="background:#1D9E75;"></span><span id="leg-a">Asset A</span></span>
+        <span class="leg"><span class="leg-sq" style="background:#378ADD;"></span><span id="leg-b">Asset B</span></span>
+        <span class="leg"><span class="leg-dash"></span>Principal</span>
+      </div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-canvas-wrap">
+        <canvas id="cmpChart" role="img" aria-label="Line chart comparing future value of two assets over time"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    FV = P × (1 + r/n)^nt<br>
+    Add to home screen for app-like experience
+  </div>
+
+</div>
+
+<script>
+let nA = 4, nB = 4, chart = null;
+
+function setF(asset, btn) {
+  document.querySelectorAll('#frq' + asset + ' .fb').forEach(b => b.classList.remove('on-a','on-b'));
+  btn.classList.add('on-' + asset.toLowerCase());
+  if (asset === 'A') nA = +btn.dataset.n; else nB = +btn.dataset.n;
+  calc();
+}
+
+function fmt(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
+function fmtS(n) {
+  n = Math.round(n);
+  if (n >= 1e7) return '₹' + (n/1e7).toFixed(2) + ' Cr';
+  if (n >= 1e5) return '₹' + (n/1e5).toFixed(1) + ' L';
+  return fmt(n);
+}
+function fv(P, r, n, t) { return P * Math.pow(1 + (r/100)/n, n*t); }
+
+function calc() {
+  const PA = +document.getElementById('pA').value||0, rA = +document.getElementById('rA').value||0, yA = +document.getElementById('yA').value||0;
+  const PB = +document.getElementById('pB').value||0, rB = +document.getElementById('rB').value||0, yB = +document.getElementById('yB').value||0;
+  const FVA = fv(PA,rA,nA,yA), FVB = fv(PB,rB,nB,yB);
+  const nameA = document.getElementById('nameA').value||'Asset A';
+  const nameB = document.getElementById('nameB').value||'Asset B';
+
+  document.getElementById('mAp').textContent = fmtS(PA);
+  document.getElementById('mAi').textContent = fmtS(FVA - PA);
+  document.getElementById('mAf').textContent = fmtS(FVA);
+  document.getElementById('mBp').textContent = fmtS(PB);
+  document.getElementById('mBi').textContent = fmtS(FVB - PB);
+  document.getElementById('mBf').textContent = fmtS(FVB);
+  document.getElementById('leg-a').textContent = nameA;
+  document.getElementById('leg-b').textContent = nameB;
+
+  const wText = document.getElementById('w-text');
+  const wSub = document.getElementById('w-sub');
+  const wBadge = document.getElementById('w-badge');
+  const wIcon = document.getElementById('w-icon');
+  if (FVA > FVB) {
+    wText.textContent = nameA + ' yields higher returns';
+    wSub.textContent = fmtS(FVA - FVB) + ' more than ' + nameB;
+    wBadge.textContent = nameA + ' wins';
+    wBadge.className = 'winner-badge badge-a';
+    wIcon.textContent = '🏆';
+  } else if (FVB > FVA) {
+    wText.textContent = nameB + ' yields higher returns';
+    wSub.textContent = fmtS(FVB - FVA) + ' more than ' + nameA;
+    wBadge.textContent = nameB + ' wins';
+    wBadge.className = 'winner-badge badge-b';
+    wIcon.textContent = '🏆';
+  } else {
+    wText.textContent = 'Both assets yield equal returns';
+    wSub.textContent = 'No difference in future value';
+    wBadge.textContent = 'Tied';
+    wBadge.className = 'winner-badge badge-tie';
+    wIcon.textContent = '🤝';
+  }
+
+  const maxY = Math.max(yA, yB);
+  const steps = Math.min(maxY, 40);
+  const labels = [], dA = [], dB = [], dP = [];
+  for (let i = 0; i <= steps; i++) {
+    const yr = (maxY / steps) * i;
+    labels.push(Math.round(yr));
+    dA.push(yr <= yA ? Math.round(fv(PA, rA, nA, yr)) : null);
+    dB.push(yr <= yB ? Math.round(fv(PB, rB, nB, yr)) : null);
+    dP.push(Math.round(Math.max(PA, PB)));
+  }
+
+  if (chart) {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = dA; chart.data.datasets[0].label = nameA;
+    chart.data.datasets[1].data = dB; chart.data.datasets[1].label = nameB;
+    chart.data.datasets[2].data = dP;
+    chart.update('none');
+  } else {
+    chart = new Chart(document.getElementById('cmpChart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: nameA, data: dA, borderColor: '#1D9E75', backgroundColor: 'rgba(29,158,117,0.08)', fill: true, tension: 0.35, pointRadius: 0, pointHoverRadius: 4, pointHoverBackgroundColor: '#1D9E75', pointHoverBorderColor: '#0d0d0d', pointHoverBorderWidth: 2, borderWidth: 2 },
+          { label: nameB, data: dB, borderColor: '#378ADD', backgroundColor: 'rgba(55,138,221,0.08)', fill: true, tension: 0.35, pointRadius: 0, pointHoverRadius: 4, pointHoverBackgroundColor: '#378ADD', pointHoverBorderColor: '#0d0d0d', pointHoverBorderWidth: 2, borderWidth: 2 },
+          { label: 'Principal', data: dP, borderColor: '#2c2c2a', borderDash: [5,4], borderWidth: 1.5, fill: false, pointRadius: 0, pointHoverRadius: 0, tension: 0 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1e1e1e',
+            titleColor: '#f0ede6',
+            bodyColor: '#888780',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            padding: 10,
+            titleFont: { family: "'DM Mono', monospace", size: 11, weight: '500' },
+            bodyFont: { family: "'DM Mono', monospace", size: 11 },
+            callbacks: {
+              title: ctx => 'Year ' + ctx[0].label,
+              label: ctx => {
+                if (ctx.dataset.label === 'Principal') return null;
+                return ' ' + ctx.dataset.label + ': ' + fmt(ctx.parsed.y);
+              },
+              afterBody: ctx => {
+                const vA = ctx.find(c => c.datasetIndex === 0);
+                const vB = ctx.find(c => c.datasetIndex === 1);
+                if (vA && vB && vA.parsed.y != null && vB.parsed.y != null) {
+                  const diff = Math.abs(vA.parsed.y - vB.parsed.y);
+                  const leader = vA.parsed.y > vB.parsed.y
+                    ? (document.getElementById('nameA').value || 'Asset A')
+                    : (document.getElementById('nameB').value || 'Asset B');
+                  return ['', ' Diff: ' + fmt(diff) + ' (' + leader + ')'];
+                }
+                return [];
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255,255,255,0.04)', drawTicks: false },
+            ticks: { color: '#4a4a46', font: { family: "'DM Mono', monospace", size: 10 }, padding: 6, callback: v => 'Y' + v },
+            border: { color: 'rgba(255,255,255,0.06)' }
+          },
+          y: {
+            grid: { color: 'rgba(255,255,255,0.04)', drawTicks: false },
+            ticks: {
+              color: '#4a4a46',
+              font: { family: "'DM Mono', monospace", size: 10 },
+              padding: 6,
+              callback: v => v >= 1e7 ? '₹'+(v/1e7).toFixed(1)+'Cr' : v >= 1e5 ? '₹'+(v/1e5).toFixed(0)+'L' : '₹'+v.toLocaleString('en-IN')
+            },
+            border: { color: 'rgba(255,255,255,0.06)' }
+          }
+        }
+      }
+    });
+  }
+}
+
+calc();
+</script>
+</body>
+</html>
